@@ -33,8 +33,8 @@ resource "aws_s3_bucket_website_configuration" "website_bucket_endpoint" {
 }
 
 resource "aws_dynamodb_table" "counter_table" {
-  name = "visitCount"
-  hash_key = "Count"
+  name         = "visitCount"
+  hash_key     = "Count"
   billing_mode = "PAY_PER_REQUEST"
 
   attribute {
@@ -46,10 +46,10 @@ resource "aws_dynamodb_table" "counter_table" {
 resource "aws_dynamodb_table_item" "counter_table_item" {
   table_name = aws_dynamodb_table.counter_table.name
   hash_key   = aws_dynamodb_table.counter_table.hash_key
-  
+
   #This rule is so we don't reset the counter with each apply
   lifecycle {
-    ignore_changes = [ item ]
+    ignore_changes = [item]
   }
   item = <<ITEM
 {
@@ -74,8 +74,8 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 }
 
 resource "aws_iam_role" "lambda_role" {
-  name               = "iam_for_lambda"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+  name                = "iam_for_lambda"
+  assume_role_policy  = data.aws_iam_policy_document.lambda_assume_role.json
   managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"]
 }
 
@@ -94,10 +94,10 @@ resource "aws_lambda_function" "lambda" {
 
   runtime = "python3.9"
   handler = "lambda_handler"
-  }
+}
 
 
-  resource "aws_api_gateway_rest_api" "api" {
+resource "aws_api_gateway_rest_api" "api" {
   name = "visitorsApi"
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -118,12 +118,12 @@ resource "aws_api_gateway_method" "api_get" {
 }
 
 resource "aws_api_gateway_integration" "integration" {
-  http_method = aws_api_gateway_method.api_get.http_method
+  http_method             = aws_api_gateway_method.api_get.http_method
   integration_http_method = "POST"
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.resource.id
-  type        = "AWS"
-  uri = aws_lambda_function.lambda.invoke_arn
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  type                    = "AWS"
+  uri                     = aws_lambda_function.lambda.invoke_arn
 }
 
 resource "aws_api_gateway_method_response" "response_200" {
@@ -132,9 +132,9 @@ resource "aws_api_gateway_method_response" "response_200" {
   http_method = aws_api_gateway_method.api_get.http_method
   status_code = "200"
   response_parameters = {
-       "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Allow-Origin" = true
   }
-   response_models = {
+  response_models = {
     "application/json" = "Empty"
   }
 }
@@ -145,7 +145,7 @@ resource "aws_api_gateway_integration_response" "integration_response" {
   http_method = aws_api_gateway_method.api_get.http_method
   status_code = aws_api_gateway_method_response.response_200.status_code
   response_parameters = {
-      "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
   }
 }
 
